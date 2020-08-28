@@ -73,20 +73,20 @@
                     "sudo apt install git -y\n",
                     "cd /usr/local/bin\n",
                     "sudo git clone https://github.com/sampalm/aws-ec2-nginx-cf.git\n",
-                    "sudo mv /usr/local/bin/aws-ec2-nginx-cf/default /etc/nginx/sites-available/default -f\n",
+                    "sudo mv /usr/local/bin/aws-ec2-nginx-cf/scripts/default /etc/nginx/sites-available/default -f\n",
                     "sudo systemctl restart nginx\n",
                     "sudo mkdir /var/www/html/api\n",
-                    "sudo mv /usr/local/bin/aws-ec2-nginx-cf/index.php  /var/www/html/api/index.php -f\n",
+                    "sudo mv /usr/local/bin/aws-ec2-nginx-cf/app/index.php  /var/www/html/api/index.php -f\n",
                     "sudo mkdir /var/www/html/logs/\n",
                     "sudo touch /var/www/html/logs/log.txt\n",
                     "sudo chmod +x /var/www/html/logs/log.txt\n",
-                    "sudo chmod +x /usr/local/bin/aws-ec2-nginx-cf/script.sh\n",
-                    "sudo chmod +x /usr/local/bin/aws-ec2-nginx-cf/cron.sh\n",
+                    "sudo chmod +x /usr/local/bin/aws-ec2-nginx-cf/scripts/script.sh\n",
+                    "sudo chmod +x /usr/local/bin/aws-ec2-nginx-cf/scripts/cron.sh\n",
                     "sudo -H pip install cloudwatchmon\n",
                     "sudo git clone https://github.com/osiegmar/cloudwatch-mon-scripts-python.git\n",
                     "sudo python3 cloudwatch-mon-scripts-python/setup.py install\n",
-                    "sudo sh /usr/local/bin/aws-ec2-nginx-cf/script.sh\n",
-                    "sudo sh /usr/local/bin/aws-ec2-nginx-cf/cron.sh\n"
+                    "sudo sh /usr/local/bin/aws-ec2-nginx-cf/scripts/script.sh\n",
+                    "sudo sh /usr/local/bin/aws-ec2-nginx-cf/scripts/cron.sh\n"
                 ]]}}
             }
         }
