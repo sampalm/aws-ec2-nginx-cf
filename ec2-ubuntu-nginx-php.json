@@ -28,6 +28,7 @@
         "EC2InstanceWeb": {
             "Type":"AWS::EC2::Instance",
             "Properties": {
+                "IamInstanceProfile": { "Ref" : "EC2-Watch" },
                 "AvailabilityZone": "us-east-2a",
                 "BlockDeviceMappings": [
                     {
