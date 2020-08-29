@@ -19,7 +19,7 @@ if (!empty($data[2]) && isset($data[2])) {
 
     $part1 = explode("'instance-id': '", $decode);
     $part2 = explode("', 'local-ipv4':", $part1[1]);
-    $instaceId = $part2[0];
+    $instaceId = explode("',", $part2[0])[0];
     $dataArray["instance"] = $instaceId;
 
     $part1 = explode("'public-hostname': '", $decode);
@@ -34,7 +34,7 @@ if (!empty($data[2]) && isset($data[2])) {
 
     $part1 = explode("'region'", $decode);
     $part2 = explode("', 'availability-zone'", $part1[1]);
-    $region = $part2[0];
+    $region = explode("'", $part2[0])[1];
     $dataArray["region"] = $region;
 }
 
