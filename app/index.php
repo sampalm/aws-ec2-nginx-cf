@@ -20,22 +20,22 @@ if (!empty($data[2]) && isset($data[2])) {
     $part1 = explode("'instance-id': '", $decode);
     $part2 = explode("', 'local-ipv4':", $part1[1]);
     $instaceId = explode("',", $part2[0])[0];
-    $dataArray["instance"] = $instaceId;
+    $dataArray["Instance"] = $instaceId;
 
     $part1 = explode("'public-hostname': '", $decode);
     $part2 = explode("', 'vpc-ipv4-cidr-blocks'", $part1[1]);
     $hostName = $part2[0];
-    $dataArray["hostname"] = $hostName;
+    $dataArray["Hostname"] = $hostName;
 
     $part1 = explode("'public-ipv4s': '", $decode);
     $part2 = explode("', 'interface-id'", $part1[1]);
     $publicIPV4 = $part2[0];
-    $dataArray["public_ipv4"] = $publicIPV4;
+    $dataArray["PublicIpv4"] = $publicIPV4;
 
     $part1 = explode("'region'", $decode);
     $part2 = explode("', 'availability-zone'", $part1[1]);
     $region = explode("'", $part2[0])[1];
-    $dataArray["region"] = $region;
+    $dataArray["Region"] = $region;
 }
 
 $fp = fopen($filename, "r");
