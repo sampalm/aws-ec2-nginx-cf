@@ -11,18 +11,21 @@
             "Description": "Define o estado de ambiente do servidor",
             "Default": "dev",
             "Type": "String",
-            "AllowedValues": ["prod", "dev"],
+            "AllowedValues": [
+                "prod",
+                "dev"
+            ],
             "ConstraintDescription": "precisa ser prod ou dev"
         },
-        "SSHLocation" : {
-            "Description" : "Define o range de IPs que podem acessar o SSH do servidor",
+        "SSHLocation": {
+            "Description": "Define o range de IPs que podem acessar o SSH do servidor",
             "Type": "String",
             "MinLength": "9",
             "MaxLength": "18",
             "Default": "0.0.0.0/0",
             "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
             "ConstraintDescription": "precisa ser um range de IP CIDR validos x.x.x.x/x."
-         }
+        }
     },
     "Resources": {
         "RootRole": {
@@ -85,6 +88,14 @@
                 ]
             }
         },
+        "ElasticIP": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "InstanceId": {
+                    "Ref": "EC2InstanceWeb"
+                }
+            }
+        },
         "SecurityGroupWebTraffic": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -94,7 +105,9 @@
                         "IpProtocol": "tcp",
                         "FromPort": 22,
                         "ToPort": 22,
-                        "CidrIp": {"Ref" : "SSHLocation"},
+                        "CidrIp": {
+                            "Ref": "SSHLocation"
+                        },
                         "Description": "SSH traffic"
                     },
                     {
@@ -128,7 +141,9 @@
                 ],
                 "ImageId": "ami-0bbe28eb2173f6167",
                 "InstanceType": "t2.micro",
-                "KeyName": { "Ref" : "KeyName" },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
                 "Tags": [
                     {
                         "Key": "Name",
@@ -136,7 +151,9 @@
                     },
                     {
                         "Key": "EnvironmentType",
-                        "Value": { "Ref" : "EnvironmentType" }
+                        "Value": {
+                            "Ref": "EnvironmentType"
+                        }
                     }
                 ],
                 "NetworkInterfaces": [
@@ -186,6 +203,14 @@
                         ]
                     }
                 }
+            }
+        }
+    },
+    "Outputs": {
+        "ElasticIPV4": {
+            "Description": "Retorna o valor do IP registrado para a instancia",
+            "Value": {
+                "Ref": "ElasticIP"
             }
         }
     }
