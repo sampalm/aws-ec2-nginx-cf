@@ -197,8 +197,8 @@
                                 "sudo -H pip install cloudwatchmon\n",
                                 "sudo git clone https://github.com/osiegmar/cloudwatch-mon-scripts-python.git\n",
                                 "sudo python3 cloudwatch-mon-scripts-python/setup.py install\n",
-                                "sudo sh /usr/local/bin/aws-ec2-nginx-cf/scripts/script.sh\n",
-                                "sudo sh /usr/local/bin/aws-ec2-nginx-cf/scripts/cron.sh\n"
+                                "sh /usr/local/bin/aws-ec2-nginx-cf/scripts/script.sh\n",
+                                "sh /usr/local/bin/aws-ec2-nginx-cf/scripts/cron.sh\n"
                             ]
                         ]
                     }
