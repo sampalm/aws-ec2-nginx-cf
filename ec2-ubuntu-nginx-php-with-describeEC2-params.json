@@ -1,0 +1,218 @@
+{
+    "Description": "Cria uma instancia EC2 usando ubuntu configurado para nginx.",
+    "Parameters": {
+        "KeyName": {
+            "Description": "Nome da chave de acesso SSH do servidor",
+            "Default": "devops-web-app",
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "ConstraintDescription": "o nome precisa ser de uma chave ja existente"
+        },
+        "EnvironmentType": {
+            "Description": "Define o estado de ambiente do servidor",
+            "Default": "dev",
+            "Type": "String",
+            "AllowedValues": [
+                "prod",
+                "dev"
+            ],
+            "ConstraintDescription": "precisa ser prod ou dev"
+        },
+        "SSHLocation": {
+            "Description": "Define o range de IPs que podem acessar o SSH do servidor",
+            "Type": "String",
+            "MinLength": "9",
+            "MaxLength": "18",
+            "Default": "0.0.0.0/0",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "precisa ser um range de IP CIDR validos x.x.x.x/x."
+        }
+    },
+    "Resources": {
+        "RootRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/"
+            }
+        },
+        "RolePolicies": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "root",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "cloudwatch:GetMetricStatistics",
+                                "cloudwatch:ListMetrics",
+                                "cloudwatch:PutMetricData",
+                                "ec2:DescribeTags"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "RootRole"
+                    }
+                ]
+            }
+        },
+        "RootInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "RootRole"
+                    }
+                ]
+            }
+        },
+        "ElasticIP": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "InstanceId": {
+                    "Ref": "EC2InstanceWeb"
+                }
+            }
+        },
+        "SecurityGroupWebTraffic": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupName": "webServerGroup",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 22,
+                        "ToPort": 22,
+                        "CidrIp": {
+                            "Ref": "SSHLocation"
+                        },
+                        "Description": "SSH traffic"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 80,
+                        "ToPort": 80,
+                        "CidrIp": "0.0.0.0/0",
+                        "Description": "HTTP traffic"
+                    }
+                ],
+                "GroupDescription": "Security Group for web server",
+                "VpcId": "vpc-f8379793"
+            }
+        },
+        "EC2InstanceWeb": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "IamInstanceProfile": {
+                    "Ref": "RootInstanceProfile"
+                },
+                "AvailabilityZone": "us-east-2a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "VolumeSize": "8",
+                            "VolumeType": "gp2",
+                            "DeleteOnTermination": "true"
+                        }
+                    }
+                ],
+                "ImageId": "ami-0bbe28eb2173f6167",
+                "InstanceType": "t2.micro",
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "nginx-server"
+                    },
+                    {
+                        "Key": "EnvironmentType",
+                        "Value": {
+                            "Ref": "EnvironmentType"
+                        }
+                    }
+                ],
+                "NetworkInterfaces": [
+                    {
+                        "Description": "Primary Interface",
+                        "DeviceIndex": "0",
+                        "SubnetId": "subnet-60ae650b",
+                        "PrivateIpAddress": "172.31.0.4",
+                        "GroupSet": [
+                            {
+                                "Ref": "SecurityGroupWebTraffic"
+                            }
+                        ]
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "sudo apt-get update\n",
+                                "sudo apt install nginx -y\n",
+                                "sudo apt install software-properties-common -y\n",
+                                "sudo add-apt-repository ppa:ondrej/php -y\n",
+                                "sudo apt install php7.4-fpm php7.4-common php7.4-dom php7.4-intl php7.4-mysql php7.4-xml php7.4-xmlrpc php7.4-curl php7.4-gd php7.4-imagick php7.4-cli php7.4-dev php7.4-imap php7.4-mbstring php7.4-soap php7.4-zip php7.4-bcmath -y\n",
+                                "sudo apt-get install python3.6\n",
+                                "sudo apt install python-pip -y\n",
+                                "sudo apt install git -y\n",
+                                "sudo apt install awscli -y\n",
+                                "sudo apt install composer -y\n",
+                                "sudo apt install npm -y\n",
+                                "cd /usr/local/bin\n",
+                                "sudo git clone https://github.com/sampalm/aws-ec2-nginx-cf.git\n",
+                                "sudo mv /usr/local/bin/aws-ec2-nginx-cf/scripts/default /etc/nginx/sites-available/default -f\n",
+                                "sudo systemctl restart nginx\n",
+                                "echo 'export EC2_INSTANCE_ID=`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`' | sudo tee -a /etc/profile \n",
+                                "echo 'export DB_HOST=`aws ec2 describe-tags --filters \"Name=resource-id,Values=\\`echo $EC2_INSTANCE_ID\\`\" \"Name=tag-key,Values=DB_HOST\" --region us-east-2 --output text | cut -f5`' | sudo tee -a /etc/profile\n",
+                                "echo 'export DB_DATABASE=`aws ec2 describe-tags --filters \"Name=resource-id,Values=\\`echo $EC2_INSTANCE_ID\\`\" \"Name=tag-key,Values=DB_DATABASE\" --region us-east-2 --output text | cut -f5`' | sudo tee -a /etc/profile\n",
+                                "echo 'export DB_PORT=`aws ec2 describe-tags --filters \"Name=resource-id,Values=\\`echo $EC2_INSTANCE_ID\\`\" \"Name=tag-key,Values=DB_PORT\" --region us-east-2 --output text | cut -f5`' | sudo tee -a /etc/profile\n",
+                                "echo 'export DB_USERNAME=`aws ec2 describe-tags --filters \"Name=resource-id,Values=\\`echo $EC2_INSTANCE_ID\\`\" \"Name=tag-key,Values=DB_USERNAME\" --region us-east-2 --output text | cut -f5`' | sudo tee -a /etc/profile\n",
+                                "echo 'export DB_PASSWORD=`aws ec2 describe-tags --filters \"Name=resource-id,Values=\\`echo $EC2_INSTANCE_ID\\`\" \"Name=tag-key,Values=DB_PASSWORD\" --region us-east-2 --output text | cut -f5`' | sudo tee -a /etc/profile\n",
+                                "echo 'export APP_NAME=`aws ec2 describe-tags --filters \"Name=resource-id,Values=\\`echo $EC2_INSTANCE_ID\\`\" \"Name=tag-key,Values=APP_NAME\" --region us-east-2 --output text | cut -f5`' | sudo tee -a /etc/profile\n",
+                                "echo 'export APP_KEY=`aws ec2 describe-tags --filters \"Name=resource-id,Values=\\`echo $EC2_INSTANCE_ID\\`\" \"Name=tag-key,Values=APP_KEY\" --region us-east-2 --output text | cut -f5`' | sudo tee -a /etc/profile\n",
+                                "echo 'export DB_CONNECTION=`aws ec2 describe-tags --filters \"Name=resource-id,Values=\\`echo $EC2_INSTANCE_ID\\`\" \"Name=tag-key,Values=DB_CONNECTION\" --region us-east-2 --output text | cut -f5`' | sudo tee -a /etc/profile\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "ElasticIPV4": {
+            "Description": "Retorna o valor do IP registrado para a instancia",
+            "Value": {
+                "Ref": "ElasticIP"
+            }
+        }
+    }
+}
